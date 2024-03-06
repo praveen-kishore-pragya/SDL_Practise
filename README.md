@@ -5,4 +5,4 @@ Learning Resources:
 - Start from the tutorial : https://www.willusher.io/pages/sdl2/
 - Started making games from: https://www.parallelrealities.co.uk/tutorials/
     - Game 1 : Creating a 2D shoot 'em up
-        - File : 2dShooter.cpp
+        - File : ./2D_Shoot'em_Up/2dShooter.cpp
