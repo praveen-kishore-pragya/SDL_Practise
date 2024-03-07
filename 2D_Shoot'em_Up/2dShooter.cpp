@@ -9,6 +9,11 @@
 // #include <thread>
 #include <pthread.h>
 
+#include <vector>
+
+//for pairs
+#include <utility>
+
 #define SCREEN_HEIGHT 720
 #define SCREEN_WIDTH 1280
 
@@ -71,7 +76,7 @@ SDL_Texture* createTexture(SDL_Renderer* renderer, std::string& filePath)
 
 
 
-void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
+void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, std::vector< std::pair<int,int> >& bulletList, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
 {
 	//creating police
     SDL_Rect police;
@@ -85,23 +90,47 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
 
     SDL_RenderCopy(renderer, texturePolice, NULL, &police);
 
+
+
+    //NOTE : Wrap only till adding a new bullet, when pressed SPACE or fire == true
 	if(fire == true)
 	{
 		//creating bullet
 		//height and width of bullet is hard coded to be 10 each
-		static int bulletX = police.x + w; // Initialize bullet position
-        static int bulletY = police.y + police.h / 2;
+        // Initialize bullet position
+		int bulletX = police.x + w;
+        int bulletY = police.y + police.h / 2;
 
-        bulletX += BULLET_VELOCITY; // Update bullet position
-        if(bulletX < SCREEN_WIDTH)
+        bulletList.push_back( std::make_pair(bulletX, bulletY) );
+
+    }
+
+
+    //Now, for each bullet, create a bullet SDL_Rect and render it on the screen
+
+    for(auto it = bulletList.begin(); it != bulletList.end();)
+    {
+        SDL_Rect bullet;
+        bullet.x = it->first; //NEVER assign bulletX, as this is a list of bullets new and old, so initialise them from the vector of pairs only
+        bullet.y = it->second; //NEVER assign bulletY, as this is a list of bullets new and old, so initialise them from the vector of pairs only
+        bullet.w = 10;
+        bullet.h = 10;
+
+        //render the created bullet
+        SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+
+        //update the position at each frame or, render for a bullet
+        it->first += BULLET_VELOCITY;
+
+        //Now, check whether the movement of bullet is within the bounds or not
+        if (it->first < SCREEN_WIDTH - bullet.w)
         {
-            SDL_Rect bullet;
-            bullet.x = bulletX;
-            bullet.y = bulletY;
-            bullet.w = 10;
-            bullet.h = 10;
-
-            SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+            //Go to next bullet
+            it++;
+        }
+        else
+        {
+            bulletList.erase(it);
         }
     }
 
@@ -176,6 +205,11 @@ int main(int argc, char* argv[])
 	int policeX = 100;
 	int policeY = 100;
 
+    //list of bullets fired
+    // pair<int,int> -> <x-position, y-position>
+    std::vector< std::pair<int,int> > bulletList;
+
+
 	while( quit != true)
 	{
 		while(SDL_PollEvent(&event))
@@ -228,8 +262,10 @@ int main(int argc, char* argv[])
 		//render police
 		//height and width is kept 100 and 100 for the police
 		// std::thread threadMainRender(&renderPolice, renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
-		renderScreen(renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
+		renderScreen(renderer, texturePolice, textureBullet,bulletList, policeX, policeY, 100, 100, 16, fire);
 
+        //NOTE : Ensure to reset the flag, otherwise the player will keep firing
+        fire = false;
 	}
 
 
