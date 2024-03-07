@@ -22,6 +22,7 @@
 #define IMAGE_WIDTH 100
 
 #define BULLET_VELOCITY 3
+#define TERRORIST_VELOCITY 3
 
 
 void printError()
@@ -76,7 +77,7 @@ SDL_Texture* createTexture(SDL_Renderer* renderer, std::string& filePath)
 
 
 
-void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, std::vector< std::pair<int,int> >& bulletList, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
+void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, std::vector< std::pair<int,int> >& bulletList, SDL_Texture* textureTerrorist, std::vector< std::pair<int,int> >& terroristList, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
 {
 	//creating police
     SDL_Rect police;
@@ -135,6 +136,39 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
     }
 
 
+    //rendering terrorist
+    //initial position of terrorist
+    static int enemyCreationTimer = 0;
+    if(--enemyCreationTimer <= 0)
+    {
+        terroristList.push_back(std::make_pair(10 * police.x, rand() % (SCREEN_HEIGHT - h) ));
+        enemyCreationTimer = 30 + rand() % 60;
+    }
+
+    for(auto it = terroristList.begin(); it != terroristList.end();)
+    {
+        SDL_Rect terrorist;
+
+        terrorist.x = it->first;
+        terrorist.y = it->second;
+        terrorist.w = w;
+        terrorist.h = w;
+
+        SDL_RenderCopy(renderer, textureTerrorist, NULL, &terrorist);
+
+        it->first -= TERRORIST_VELOCITY;
+
+        if(it->first > w)
+        {
+            it++;
+        }
+        else
+        {
+            terroristList.erase(it);
+        }
+    }
+
+
     SDL_RenderPresent(renderer);
 
     SDL_Delay(delay);
@@ -181,12 +215,19 @@ int main(int argc, char* argv[])
 	std::string bulletPath = "./../resources/props/bullet.png";
 	std::string bulletShotPath = "./../resources/props/bullet_shot.png";
 
+	std::string terroristPath = "./../resources/characters/Terrorist.png";
 
     SDL_Texture* texturePolice = createTexture(renderer, policePath);
 	checkPointer(texturePolice);
 
     SDL_Texture* textureBullet = createTexture(renderer, bulletPath);
 	checkPointer(textureBullet);
+
+
+    SDL_Texture* textureTerrorist = createTexture(renderer, terroristPath);
+    checkPointer(textureTerrorist);
+
+
     // if(texture == nullptr)
     // {
     //     std::cout << " Texture was not created: " << SDL_GetError() << std::endl;
@@ -208,6 +249,10 @@ int main(int argc, char* argv[])
     //list of bullets fired
     // pair<int,int> -> <x-position, y-position>
     std::vector< std::pair<int,int> > bulletList;
+
+    //list of terrorists
+    // pair<int,int> -> <x-position, y-position>
+    std::vector< std::pair<int,int> > terroristList;
 
 
 	while( quit != true)
@@ -262,7 +307,7 @@ int main(int argc, char* argv[])
 		//render police
 		//height and width is kept 100 and 100 for the police
 		// std::thread threadMainRender(&renderPolice, renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
-		renderScreen(renderer, texturePolice, textureBullet,bulletList, policeX, policeY, 100, 100, 16, fire);
+		renderScreen(renderer, texturePolice, textureBullet, bulletList, textureTerrorist, terroristList, policeX, policeY, 100, 100, 16, fire);
 
         //NOTE : Ensure to reset the flag, otherwise the player will keep firing
         fire = false;
