@@ -6,7 +6,8 @@
 
 //creeating thread to maintain movement of fired bullet on another thread,
 //bcoz the movemnt of thread will be in a loop, and it will hinder other activities of the main thread
-#include <thread>
+// #include <thread>
+#include <pthread.h>
 
 #define SCREEN_HEIGHT 720
 #define SCREEN_WIDTH 1280
@@ -14,6 +15,8 @@
 
 #define IMAGE_HEIGHT 100
 #define IMAGE_WIDTH 100
+
+#define BULLET_VELOCITY 1
 
 
 void printError()
@@ -54,7 +57,15 @@ SDL_Texture* createTexture(SDL_Renderer* renderer, std::string& filePath)
 }
 
 
-void renderPolice(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
+
+void moveBullets (SDL_Rect* bullet, SDL_Texture* textureBullet, SDL_Renderer* renderer)
+{
+
+}
+
+
+
+void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
 {
 	//creating police
     SDL_Rect police;
@@ -72,14 +83,19 @@ void renderPolice(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
 	if(fire == true)
 	{
 		//creating bullet
-		//height and width of bullet is hard coded to be 10 each
+		//height and width of bullet is hard coded to be 20 each
 		SDL_Rect bullet;
 		bullet.x = police.x + w;
 		bullet.y = police.y + police.h/2;
-		bullet.w = 10;
-		bullet.h = 10;
-
-    	SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+		bullet.w = 20;
+		bullet.h = 20;
+    	
+		SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+		
+		pthread_t bulletThread;
+		pthread_create(&bulletThread, NULL, &moveBullets, bullet, textureBullet, renderer);
+		pthread_join(bulletThread, NULL);
+		
 	}
 
 	SDL_RenderPresent(renderer);
@@ -203,7 +219,8 @@ int main(int argc, char* argv[])
 		}
 		//render police
 		//height and width is kept 100 and 100 for the police
-		std::thread threadMainRender(renderPolice, renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
+		// std::thread threadMainRender(&renderPolice, renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
+		renderScreen(renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
 
 	}
 
