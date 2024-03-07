@@ -1,5 +1,5 @@
-//Command to Run - 
-// g++ 2dShooter.cpp -o prog -lmingw32 -lSDL2main -lSDL2_image -lSDL2
+//Command to Run -
+// g++ 2dShooter.cpp -o prog -lpthread -lmingw32 -lSDL2main -lSDL2_image -lSDL2
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -58,9 +58,15 @@ SDL_Texture* createTexture(SDL_Renderer* renderer, std::string& filePath)
 
 
 
-void moveBullets (SDL_Rect* bullet, SDL_Texture* textureBullet, SDL_Renderer* renderer)
+void moveBullets (SDL_Rect* bullet, vector<void*> args)
 {
+    while(bullet->w < (SCREEN_WIDTH - bullet->w))
+    {
+        bullet->x += BULLET_VELOCITY;
+        SDL_RenderCopy(renderer, textureBullet, NULL, bullet);
 
+        SDL_RenderPresent(renderer);
+    }
 }
 
 
@@ -74,28 +80,28 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
     police.w = w;
     police.h = h;
 
-	
+
 	SDL_RenderClear(renderer);
 
 
     SDL_RenderCopy(renderer, texturePolice, NULL, &police);
-	
+
 	if(fire == true)
 	{
 		//creating bullet
-		//height and width of bullet is hard coded to be 20 each
+		//height and width of bullet is hard coded to be 10 each
 		SDL_Rect bullet;
 		bullet.x = police.x + w;
 		bullet.y = police.y + police.h/2;
-		bullet.w = 20;
-		bullet.h = 20;
-    	
+		bullet.w = 10;
+		bullet.h = 10;
+
 		SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
-		
+
 		pthread_t bulletThread;
-		pthread_create(&bulletThread, NULL, &moveBullets, bullet, textureBullet, renderer);
+		pthread_create(&bulletThread, NULL, &moveBullets, {bullet, textureBullet, renderer});
 		pthread_join(bulletThread, NULL);
-		
+
 	}
 
 	SDL_RenderPresent(renderer);
@@ -126,25 +132,25 @@ int main(int argc, char* argv[])
                                             SCREEN_WIDTH,
                                             SCREEN_HEIGHT,
                                             SDL_WINDOW_SHOWN);  //can put  | SDL_WINDOW_RESIZABLE, BUT then have to calculate the resized window for character movement
-    
-    
+
+
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window,
                                                 -1,
                                                 SDL_RENDERER_ACCELERATED |
                                                 SDL_RENDERER_PRESENTVSYNC);
 
-    
+
 
 	//color the window
 	SDL_SetRenderDrawColor(renderer, 47, 77, 76, 255);
 
-    
+
 	std::string policePath = "./../resources/characters/Police.png";
 	std::string bulletPath = "./../resources/props/bullet.png";
 	std::string bulletShotPath = "./../resources/props/bullet_shot.png";
-    
-    
+
+
     SDL_Texture* texturePolice = createTexture(renderer, policePath);
 	checkPointer(texturePolice);
 
@@ -163,7 +169,7 @@ int main(int argc, char* argv[])
 
 	//keep track of firing bullets
 	bool fire = false;
-	
+
 	//initial position of the Police
 	int policeX = 100;
 	int policeY = 100;
@@ -213,7 +219,7 @@ int main(int argc, char* argv[])
 
 				}
 			}
-			
+
 
 
 		}
