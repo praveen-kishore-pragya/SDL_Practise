@@ -16,7 +16,7 @@
 #define IMAGE_HEIGHT 100
 #define IMAGE_WIDTH 100
 
-#define BULLET_VELOCITY 1
+#define BULLET_VELOCITY 3
 
 
 void printError()
@@ -58,16 +58,16 @@ SDL_Texture* createTexture(SDL_Renderer* renderer, std::string& filePath)
 
 
 
-void moveBullets (SDL_Rect* bullet, vector<void*> args)
-{
-    while(bullet->w < (SCREEN_WIDTH - bullet->w))
-    {
-        bullet->x += BULLET_VELOCITY;
-        SDL_RenderCopy(renderer, textureBullet, NULL, bullet);
+// void moveBullets (SDL_Rect* bullet, vector<void*> args)
+// {
+//     while(bullet->w < (SCREEN_WIDTH - bullet->w))
+//     {
+//         bullet->x += BULLET_VELOCITY;
+//         SDL_RenderCopy(renderer, textureBullet, NULL, bullet);
 
-        SDL_RenderPresent(renderer);
-    }
-}
+//         SDL_RenderPresent(renderer);
+//     }
+// }
 
 
 
@@ -83,28 +83,30 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
 
 	SDL_RenderClear(renderer);
 
-
     SDL_RenderCopy(renderer, texturePolice, NULL, &police);
 
 	if(fire == true)
 	{
 		//creating bullet
 		//height and width of bullet is hard coded to be 10 each
-		SDL_Rect bullet;
-		bullet.x = police.x + w;
-		bullet.y = police.y + police.h/2;
-		bullet.w = 10;
-		bullet.h = 10;
+		static int bulletX = police.x + w; // Initialize bullet position
+        static int bulletY = police.y + police.h / 2;
 
-		SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+        bulletX += BULLET_VELOCITY; // Update bullet position
+        if(bulletX < SCREEN_WIDTH)
+        {
+            SDL_Rect bullet;
+            bullet.x = bulletX;
+            bullet.y = bulletY;
+            bullet.w = 10;
+            bullet.h = 10;
 
-		pthread_t bulletThread;
-		pthread_create(&bulletThread, NULL, &moveBullets, {bullet, textureBullet, renderer});
-		pthread_join(bulletThread, NULL);
+            SDL_RenderCopy(renderer, textureBullet, NULL, &bullet);
+        }
+    }
 
-	}
 
-	SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer);
 
     SDL_Delay(delay);
 
