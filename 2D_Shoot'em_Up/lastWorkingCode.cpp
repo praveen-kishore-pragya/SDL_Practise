@@ -91,8 +91,29 @@ bool checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) {
 
 
 
-void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, std::vector< std::pair<int,int> >& bulletList, SDL_Texture* textureTerrorist, std::vector< std::pair<int,int> >& terroristList, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
+void renderScreen(SDL_Renderer* renderer, SDL_Texture* textureBackground, SDL_Texture* texturePolice,  SDL_Texture* textureBullet, std::vector< std::pair<int,int> >& bulletList, SDL_Texture* textureTerrorist, std::vector< std::pair<int,int> >& terroristList, int x = 0, int y = 0, int w = SCREEN_WIDTH, int h = SCREEN_HEIGHT, int delay = 1000, bool fire = false)
 {
+
+    SDL_RenderClear(renderer);
+
+    SDL_Rect background;
+    static int backgroundOffset = 0;
+    // int backgroundSpeed = 2;
+    // background.x = backgroundOffset;
+    background.x = 0;
+    // if(background.x >= SCREEN_WIDTH)
+    // {
+    //     background.x = 0;
+    // }
+    background.y = 0;
+    background.w = SCREEN_WIDTH;
+    background.h = SCREEN_HEIGHT;
+
+    SDL_RenderCopy(renderer, textureBackground, NULL, &background);
+    // backgroundOffset > SCREEN_WIDTH ? backgroundOffset + backgroundSpeed : 0;
+    // backgroundOffset += SCREEN_WIDTH;
+    // backgroundOffset = backgroundOffset % SCREEN_WIDTH;
+
 	//creating police
     SDL_Rect police;
     police.x = x;
@@ -101,7 +122,6 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
     police.h = h;
 
 
-	SDL_RenderClear(renderer);
 
     SDL_RenderCopy(renderer, texturePolice, NULL, &police);
 
@@ -204,7 +224,7 @@ void renderScreen(SDL_Renderer* renderer, SDL_Texture* texturePolice,  SDL_Textu
     if(--enemyCreationTimer <= 0)
     {
         terroristList.push_back(std::make_pair(10 * police.x, rand() % (SCREEN_HEIGHT - h) ));
-        enemyCreationTimer = 30 + rand() % 60;
+        enemyCreationTimer = 60 + rand() % 120;
     }
 
 
@@ -281,6 +301,8 @@ int main(int argc, char* argv[])
 
 	std::string terroristPath = "./../resources/characters/Terrorist.png";
 
+    std::string backgroundImagePath = "./../resources/backgrounds/bridge.png";
+
     SDL_Texture* texturePolice = createTexture(renderer, policePath);
 	checkPointer(texturePolice);
 
@@ -290,6 +312,9 @@ int main(int argc, char* argv[])
 
     SDL_Texture* textureTerrorist = createTexture(renderer, terroristPath);
     checkPointer(textureTerrorist);
+
+    SDL_Texture* textureBackground = createTexture(renderer, backgroundImagePath);
+    checkPointer(textureBackground);
 
 
     // if(texture == nullptr)
@@ -371,7 +396,7 @@ int main(int argc, char* argv[])
 		//render police
 		//height and width is kept 100 and 100 for the police
 		// std::thread threadMainRender(&renderPolice, renderer, texturePolice, textureBullet, policeX, policeY, 100, 100, 16, fire);
-		renderScreen(renderer, texturePolice, textureBullet, bulletList, textureTerrorist, terroristList, policeX, policeY, 100, 100, 16, fire);
+		renderScreen(renderer, textureBackground, texturePolice, textureBullet, bulletList, textureTerrorist, terroristList, policeX, policeY, 100, 100, 16, fire);
 
         //NOTE : Ensure to reset the flag, otherwise the player will keep firing
         fire = false;
